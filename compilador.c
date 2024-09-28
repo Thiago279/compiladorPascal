@@ -28,6 +28,16 @@ typedef enum {
     TO,
     TRUE,
     WRITE,
+    PONTO_VIRGULA,
+    VIRGULA,
+    MAIS,          // Para '+'
+    MENOS,         // Para '-'
+    MAIOR,         // Para '>'
+    MENOR,         // Para '<'
+    IGUAL,        
+    DOIS_PONTOS,
+    ABRE_PAR,
+    FECHA_PAR,
     EOS
 } TAtomo;
 
@@ -68,8 +78,48 @@ char *msgAtomo[] = {
     "TO",
     "TRUE",
     "WRITE",
+    "PONTO_VIRGULA",
+    "VIRGULA",
+    "MAIS",        
+    "MENOS",         
+    "MAIOR",        
+    "MENOR",         
+    "IGUAL",        
+    "DOIS_PONTOS",
+    "ABRE_PAR",
+    "FECHA_PAR",
     "EOS"
 };
+
+const char* token_to_string(TAtomo token) {
+    switch (token) {
+        case PROGRAM: return "program";
+        case BEGIN: return "begin";
+        case END: return "end";
+        case INTEGER: return "integer";
+        case BOOLEAN: return "boolean";
+        case IF: return "if";
+        case ELIF: return "elif";
+        case READ: return "read";
+        case WRITE: return "write";
+        case SET: return "set";
+        case TO: return "to";
+        case COMENTARIO: return "comentario";
+        case ';': return "ponto_virgula";
+        case ',': return "virgula";
+        case '(': return "abre_par";
+        case ')': return "fecha_par";
+
+        default:
+            if (token < 256) {
+                static char str[2];
+                str[0] = (char)token;
+                str[1] = '\0';
+                return str;
+            }
+            return msgAtomo[token];
+    }
+}
 
 // Protótipos de funções do analisador léxico
 char* ler_arquivo(const char* nome_arquivo);
@@ -117,7 +167,7 @@ TInfoAtomo obter_atomo() {
 
         if (*buffer == '#' || (*buffer == '{' && *(buffer + 1) == '-')) {
             info_atomo = reconhece_comentario();
-            printf("%03d# %s | %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.comentario);
+            printf("# %d: %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo]);
             // Continue procurando o próximo átomo após o comentário
             continue;
         }
@@ -144,41 +194,28 @@ TInfoAtomo obter_atomo() {
 TInfoAtomo reconhece_comentario() {
     TInfoAtomo info_atomo;
     info_atomo.atomo = COMENTARIO;
-
-    char *inicioComentario = buffer;
+    info_atomo.linha = contaLinha;
 
     if (*buffer == '#') {
-        // Comentário de uma linha (começando com '#')
+        // Comentário de uma linha
         while (*buffer != '\n' && *buffer != 0) {
             buffer++;
         }
-        // Copia o comentário para a estrutura
-        strncpy(info_atomo.comentario, inicioComentario, buffer - inicioComentario);
-        info_atomo.comentario[buffer - inicioComentario] = '\0';
-
         if (*buffer == '\n') {
             contaLinha++;
             buffer++;
         }
     } else if (*buffer == '{' && *(buffer + 1) == '-') {
-        // Comentário de várias linhas (começando com '{-')
-        buffer += 2; // Pula os caracteres '{-'
-
+        // Comentário de várias linhas
+        buffer += 2;
         while (!(*buffer == '-' && *(buffer + 1) == '}') && *buffer != 0) {
             if (*buffer == '\n')
                 contaLinha++;
             buffer++;
         }
-
         if (*buffer == '-' && *(buffer + 1) == '}') {
-            buffer += 2; // Pula os caracteres '-}'
+            buffer += 2;
         }
-
-        // Copia o comentário para a estrutura
-        strncpy(info_atomo.comentario, inicioComentario, buffer - inicioComentario);
-        info_atomo.comentario[buffer - inicioComentario] = '\0';
-    } else {
-        info_atomo.atomo = ERRO;
     }
 
     return info_atomo;
@@ -287,17 +324,21 @@ void programa();
 void consome() {
     lookahead = obter_atomo();
     
-    // Exibe o token lido com os atributos relevantes
-    if (lookahead.atomo == IDENTIFICADOR) {
-        printf("%03d# %s | %s\n", lookahead.linha, msgAtomo[IDENTIFICADOR], lookahead.atributo_ID);
-    } else if (lookahead.atomo == NUMERO) {
-        printf("%03d# %s | %d\n", lookahead.linha, msgAtomo[NUMERO], lookahead.atributo_numero);
-    } else if (lookahead.atomo == COMENTARIO) {
-        printf("%03d# %s | %s\n", lookahead.linha, msgAtomo[COMENTARIO], lookahead.comentario);
-    } else if (lookahead.atomo == EOS) {
-        printf("%03d# %s\n", lookahead.linha, msgAtomo[EOS]);
-    } else {
-        printf("%03d# %s\n", lookahead.linha, msgAtomo[lookahead.atomo]);
+    switch (lookahead.atomo) {
+        case IDENTIFICADOR:
+            printf("# %d:identificador | %s\n", lookahead.linha, lookahead.atributo_ID);
+            break;
+        case NUMERO:
+            printf("# %d:numero | %d\n", lookahead.linha, lookahead.atributo_numero);
+            break;
+        case COMENTARIO:
+            printf("# %d:comentario\n", lookahead.linha);
+            break;
+        case EOS:
+            printf("# %d:fim\n", lookahead.linha);
+            break;
+        default:
+            printf("# %d:%s\n", lookahead.linha, token_to_string(lookahead.atomo));
     }
 }
 
@@ -306,9 +347,8 @@ void consome() {
 // (Copie as implementações do seu arquivo sintatico.c)
 // Funções para cada produção da gramática
 void erro(TAtomo esperado, TAtomo encontrado) {
-    // Exibe o erro sintático detalhado
     printf("Erro sintático na linha %d: Esperado [%s], mas encontrado [%s].\n", 
-           lookahead.linha, msgAtomo[esperado], msgAtomo[encontrado]);
+           lookahead.linha, token_to_string(esperado), token_to_string(encontrado));
     
     if (esperado == IDENTIFICADOR) {
         printf("Esperava um identificador, mas encontrou '%s'.\n", lookahead.atributo_ID);
@@ -316,16 +356,16 @@ void erro(TAtomo esperado, TAtomo encontrado) {
         printf("Esperava um número, mas encontrou '%d'.\n", lookahead.atributo_numero);
     }
     
-    exit(1); // Finaliza a execução ao encontrar um erro
+    exit(1);
 }
 
 int match(TAtomo esperado) {
     if (lookahead.atomo == esperado) {
-        consome();  // Consumir o token
-        return 1;   // Retorna verdadeiro se houve correspondência
+        consome();
+        return 1;
     } else {
-        erro(esperado, lookahead.atomo);  // Chama a função de erro
-        return 0;   // Retorna falso se não houve correspondência
+        erro(esperado, lookahead.atomo);
+        return 0;
     }
 }
 
@@ -346,41 +386,15 @@ void comando_composto();
 
 // <programa> ::= program identificador “;” <bloco> “.”
 void programa() {
-    // Consumir átomos até encontrar PROGRAM
     while (lookahead.atomo != PROGRAM && lookahead.atomo != EOS) {
         consome();
     }
 
-    // Verificar e consumir o token PROGRAM
-    if (match(PROGRAM)) {
-        printf("%03d# %s\n", lookahead.linha, msgAtomo[PROGRAM]);
-    } else {
-        printf("Erro sintático: Esperado 'PROGRAM' na linha %d\n", lookahead.linha);
-    }
-
-    // Verificar e consumir o token IDENTIFICADOR
-    if (match(IDENTIFICADOR)) {
-        printf("%03d# %s | %s\n", lookahead.linha, msgAtomo[IDENTIFICADOR], lookahead.atributo_ID);
-    } else {
-        printf("Erro sintático: Esperado 'IDENTIFICADOR' na linha %d\n", lookahead.linha);
-    }
-
-    // Verificar e consumir o token ';'
-    if (match(';')) {
-        printf("%03d# ponto_virgula\n", lookahead.linha);
-    } else {
-        printf("Erro sintático: Esperado ';' na linha %d\n", lookahead.linha);
-    }
-
-    // Verificar e consumir o bloco
+    match(PROGRAM);
+    match(IDENTIFICADOR);
+    match(';');
     bloco();
-
-    // Verificar e consumir o token '.'
-    if (match('.')) {
-        printf("%03d# ponto\n", lookahead.linha);
-    } else {
-        printf("Erro sintático: Esperado '.' na linha %d\n", lookahead.linha);
-    }
+    match('.');
 }
 
 

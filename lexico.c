@@ -35,11 +35,17 @@ typedef enum{
     WRITE,
     PONTO_VIRGULA,
     VIRGULA,
-    MAIS,          // Para '+'
-    MENOS,         // Para '-'
-    MAIOR,         // Para '>'
+    PONTO,
+    MAIS,          
+    MENOS,
+    MULTIPLICACAO,
+    DIVISAO,         
+    MAIOR,         
     MENOR, 
-    IGUAL,        // Para '<'
+    IGUAL,
+    MAIOR_IGUAL,
+    MENOR_IGUAL,
+    DIFERENTE,        
     DOIS_PONTOS,
     ABRE_PAR,
     FECHA_PAR,
@@ -49,7 +55,7 @@ typedef enum{
 typedef struct{
     TAtomo atomo;
     int linha;
-    int atributo_numero; // Modificado de float para int
+    int atributo_numero; 
     char atributo_ID[16];
     char comentario[256];
 } TInfoAtomo;
@@ -80,11 +86,17 @@ char *msgAtomo[] = {
     "WRITE",
     "PONTO_VIRGULA",
     "VIRGULA",
+    "PONTO",
     "MAIS",
     "MENOS",
+    "MULTIPLICACAO",
+    "DIVISAO",
     "MAIOR",
     "MENOR",
     "IGUAL",
+    "MAIOR_IGUAL",
+    "MENOR_IGUAL",
+    "DIFERENTE",
     "DOIS_PONTOS",
     "ABRE_PAR",
     "FECHA_PAR",
@@ -130,6 +142,7 @@ TInfoAtomo obter_atomo(); // irá integrar com a Analisador Sintatico
 TInfoAtomo reconhece_id();
 TInfoAtomo reconhece_num();
 TInfoAtomo reconhece_comentario();
+TInfoAtomo reconhece_relacional();
 
 int main (int argc, char *argv[]) {
     if (argc != 2) {
@@ -147,8 +160,6 @@ int main (int argc, char *argv[]) {
             printf("%03d# %s | %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.atributo_ID);
         else if (info_atomo.atomo == NUMERO)
             printf("%03d# %s | %d\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.atributo_numero);
-        else if (info_atomo.atomo == COMENTARIO)
-            printf("%03d# %s | %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.comentario);
         else if (info_atomo.atomo == ERRO)
             printf("%03d# Erro léxico\n", info_atomo.linha);
         else
@@ -180,6 +191,9 @@ TInfoAtomo obter_atomo() {
         info_atomo.atomo = PONTO_VIRGULA;
         buffer++;
          
+    } else if (*buffer == '.') {
+        info_atomo.atomo = PONTO;
+        buffer++;
     } else if (*buffer == ',') {
         info_atomo.atomo = VIRGULA;
         buffer++;
@@ -195,20 +209,18 @@ TInfoAtomo obter_atomo() {
     } else if (*buffer == '-') {
         info_atomo.atomo = MENOS;
         buffer++;
-    } else if (*buffer == '=') {
-        info_atomo.atomo = IGUAL;
+    } else if (*buffer == '*') {
+        info_atomo.atomo = MULTIPLICACAO;
         buffer++;
-    }
-    else if (*buffer == '>') {
-        info_atomo.atomo = MAIOR;
+    } else if (*buffer == '/') {
+        info_atomo.atomo = DIVISAO;
         buffer++;
-    } else if (*buffer == '<') {
-        info_atomo.atomo = MENOR;
-        buffer++;
+    } else if (*buffer == '=' || *buffer == '>' || *buffer == '<') {
+        info_atomo = reconhece_relacional();
     } else if (*buffer == ':') {
         info_atomo.atomo = DOIS_PONTOS;
         buffer++;
-    }else if (islower(*buffer)) { // Se for letra minúscula
+    } else if (islower(*buffer)) { // Se for letra minúscula
         info_atomo = reconhece_id();
     } else if (*buffer == '#' || (*buffer == '{' && *(buffer + 1) == '-')) {
         info_atomo = reconhece_comentario();
@@ -292,6 +304,39 @@ TInfoAtomo reconhece_num() {
         info_atomo.atomo = NUMERO;
     }
 
+    return info_atomo;
+}
+
+TInfoAtomo reconhece_relacional() {
+    TInfoAtomo info_atomo;
+    info_atomo.atomo = ERRO;
+
+    // Verifica o operador relacional
+    if (*buffer == '=') {
+        info_atomo.atomo = IGUAL;
+        buffer++;
+    } else if (*buffer == '>') {
+        buffer++;
+        if (*buffer == '=') {  // Verifica se é '>='
+            info_atomo.atomo = MAIOR_IGUAL;
+            buffer++;
+        } else {
+            info_atomo.atomo = MAIOR;  // Apenas '>'
+        }
+    } else if (*buffer == '<') {
+        buffer++;
+        if (*buffer == '=') {  // Verifica se é '<='
+            info_atomo.atomo = MENOR_IGUAL;
+            buffer++;
+        } else if (*buffer == '>') {  // Verifica se é '/='
+            info_atomo.atomo = DIFERENTE;
+            buffer++;
+        } else {
+            info_atomo.atomo = MENOR;  // Apenas '<'
+        }
+    }
+
+    info_atomo.linha = contaLinha;
     return info_atomo;
 }
 

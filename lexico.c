@@ -33,6 +33,7 @@ typedef enum{
     TO,
     TRUE,
     WRITE,
+    PONTO_VIRGULA,
     EOS
 } TAtomo;
 
@@ -68,6 +69,7 @@ char *msgAtomo[] = {
     "TO",
     "TRUE",
     "WRITE",
+    "PONTO_VIRGULA",
     "EOS"
 };
 
@@ -129,6 +131,8 @@ int main (int argc, char *argv[]) {
             printf("%03d# %s | %d\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.atributo_numero);
         else if (info_atomo.atomo == COMENTARIO)
             printf("%03d# %s | %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.comentario);
+        else if (info_atomo.atomo == PONTO_VIRGULA)
+            printf("%03d# %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo]);
         else
             printf("%03d# %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo]);
 
@@ -154,7 +158,11 @@ TInfoAtomo obter_atomo() {
     }
 
     // reconhece identificador ou número
-    if (islower(*buffer)) { // Se for letra minúscula
+    if (*buffer == ';') {
+        info_atomo.atomo = PONTO_VIRGULA;
+        buffer++;
+         
+    } else if (islower(*buffer)) { // Se for letra minúscula
         info_atomo = reconhece_id();
     } else if (*buffer == '#' || (*buffer == '{' && *(buffer + 1) == '-')) {
         info_atomo = reconhece_comentario();

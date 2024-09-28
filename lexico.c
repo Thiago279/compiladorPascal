@@ -38,7 +38,8 @@ typedef enum{
     MAIS,          // Para '+'
     MENOS,         // Para '-'
     MAIOR,         // Para '>'
-    MENOR,         // Para '<'
+    MENOR, 
+    IGUAL,        // Para '<'
     DOIS_PONTOS,
     ABRE_PAR,
     FECHA_PAR,
@@ -83,6 +84,7 @@ char *msgAtomo[] = {
     "MENOS",
     "MAIOR",
     "MENOR",
+    "IGUAL",
     "DOIS_PONTOS",
     "ABRE_PAR",
     "FECHA_PAR",
@@ -193,7 +195,11 @@ TInfoAtomo obter_atomo() {
     } else if (*buffer == '-') {
         info_atomo.atomo = MENOS;
         buffer++;
-    } else if (*buffer == '>') {
+    } else if (*buffer == '=') {
+        info_atomo.atomo = IGUAL;
+        buffer++;
+    }
+    else if (*buffer == '>') {
         info_atomo.atomo = MAIOR;
         buffer++;
     } else if (*buffer == '<') {

@@ -1,0 +1,14 @@
+    var123456789123
+
+ var2 
+# Comentário de linha
+and
+or
+	0b1101
+
+{- Comentário
+
+de várias 
+ linhas -}
+
+ vaa3  

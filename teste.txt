@@ -4,7 +4,7 @@
 # Comentário de linha
 and
 or
-	0b1101
+	0b1101;
 
 {- Comentário
 

@@ -133,8 +133,8 @@ int main (int argc, char *argv[]) {
             printf("%03d# %s | %d\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.atributo_numero);
         else if (info_atomo.atomo == COMENTARIO)
             printf("%03d# %s | %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo], info_atomo.comentario);
-        else if (info_atomo.atomo == PONTO_VIRGULA || info_atomo.atomo == VIRGULA)
-            printf("%03d# %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo]);
+        else if (info_atomo.atomo == ERRO)
+            printf("%03d# Erro léxico\n", info_atomo.linha);
         else
             printf("%03d# %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo]);
 

@@ -1,1 +1,3 @@
-# compiladorPascal-
+# compiladorPascal
+
+Compilador para linguagem Pascal+-

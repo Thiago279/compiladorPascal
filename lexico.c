@@ -35,6 +35,13 @@ typedef enum{
     WRITE,
     PONTO_VIRGULA,
     VIRGULA,
+    MAIS,          // Para '+'
+    MENOS,         // Para '-'
+    MAIOR,         // Para '>'
+    MENOR,         // Para '<'
+    DOIS_PONTOS,
+    ABRE_PAR,
+    FECHA_PAR,
     EOS
 } TAtomo;
 
@@ -72,6 +79,13 @@ char *msgAtomo[] = {
     "WRITE",
     "PONTO_VIRGULA",
     "VIRGULA",
+    "MAIS",
+    "MENOS",
+    "MAIOR",
+    "MENOR",
+    "DOIS_PONTOS",
+    "ABRE_PAR",
+    "FECHA_PAR",
     "EOS"
 };
 
@@ -167,8 +181,28 @@ TInfoAtomo obter_atomo() {
     } else if (*buffer == ',') {
         info_atomo.atomo = VIRGULA;
         buffer++;
-    }
-    else if (islower(*buffer)) { // Se for letra minúscula
+    } else if (*buffer == '(') {
+        info_atomo.atomo = ABRE_PAR;
+        buffer++;
+    } else if (*buffer == ')') {
+        info_atomo.atomo = FECHA_PAR;
+        buffer++;
+    } else if (*buffer == '+') {
+        info_atomo.atomo = MAIS;
+        buffer++;
+    } else if (*buffer == '-') {
+        info_atomo.atomo = MENOS;
+        buffer++;
+    } else if (*buffer == '>') {
+        info_atomo.atomo = MAIOR;
+        buffer++;
+    } else if (*buffer == '<') {
+        info_atomo.atomo = MENOR;
+        buffer++;
+    } else if (*buffer == ':') {
+        info_atomo.atomo = DOIS_PONTOS;
+        buffer++;
+    }else if (islower(*buffer)) { // Se for letra minúscula
         info_atomo = reconhece_id();
     } else if (*buffer == '#' || (*buffer == '{' && *(buffer + 1) == '-')) {
         info_atomo = reconhece_comentario();

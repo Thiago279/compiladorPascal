@@ -5,7 +5,7 @@
 and,
 or
 	0b1101;
-(<>+-):
+(<>+-): =
 {- Comentário
 
 de várias 

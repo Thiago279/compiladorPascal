@@ -2,7 +2,7 @@
 
  var2 
 # Comentário de linha
-and
+and,
 or
 	0b1101;
 

@@ -193,8 +193,9 @@ TInfoAtomo obter_atomo() {
     } else {
         info_atomo.atomo = ERRO;
     }
-
-    info_atomo.linha = contaLinha;
+    if (info_atomo.atomo!=COMENTARIO)
+        info_atomo.linha = contaLinha;
+    //info_atomo.linha = contaLinha;
     return info_atomo;
 }
 
@@ -238,6 +239,7 @@ TInfoAtomo reconhece_comentario() {
 
     if (*buffer == '#') {
         // Comentário de uma linha
+        info_atomo.linha = contaLinha; 
         while (*buffer != '\n' && *buffer != 0) {
             buffer++;
         }/*
@@ -247,6 +249,7 @@ TInfoAtomo reconhece_comentario() {
         }*/
     } else if (*buffer == '{' && *(buffer + 1) == '-') {
         // Comentário de várias linhas
+        info_atomo.linha = contaLinha;
         buffer += 2;
         while (!(*buffer == '-' && *(buffer + 1) == '}') && *buffer != 0) {
             if (*buffer == '\n')
@@ -411,10 +414,6 @@ void consome(TAtomo atomo){
 }
 // <programa> ::= program identificador “;” <bloco> “.”
 void programa() {
-    /*while (lookahead != PROGRAM && lookahead != EOS) {
-        consome(lookahead);
-    }
-*/  
     consome(PROGRAM);
     consome(IDENTIFICADOR);
     consome(PONTO_VIRGULA);

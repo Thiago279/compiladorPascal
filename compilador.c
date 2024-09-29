@@ -141,7 +141,7 @@ TInfoAtomo obter_atomo() {
             info_atomo = reconhece_comentario();
             printf("# %d: %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo]);
             // Continue procurando o próximo átomo após o comentário
-            continue;
+            break;
         }
 
         if (islower(*buffer)) {
@@ -345,6 +345,7 @@ void consome(TAtomo atomo){
     if(lookahead==atomo){
         info_atomo = obter_atomo();
         lookahead=info_atomo.atomo;
+
         if (info_atomo.atomo == IDENTIFICADOR)
             printf("%03d# %s | %s\n", info_atomo.linha, msgAtomo[lookahead], info_atomo.atributo_ID);
         else if (info_atomo.atomo == NUMERO)

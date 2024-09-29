@@ -2,7 +2,7 @@ Compilador Fase 1 : Pascal+-
 
 Autores:
 Erik Samuel Viana Hsu - 10403109
-Thiago Shihan Cardoso Toma - 1040
+Thiago Shihan Cardoso Toma - 10400764
 
 Como compilar o programa (considerando que o nome do programa seja compilador.c):
 gcc -g -Og -Wall compilador.c -o compilador

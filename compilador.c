@@ -31,11 +31,16 @@ typedef enum {
     PONTO_VIRGULA,
     VIRGULA,
     PONTO,
-    MAIS,          // Para '+'
-    MENOS,         // Para '-'
-    MAIOR,         // Para '>'
-    MENOR,         // Para '<'
-    IGUAL,        
+    OP_SOMA,          // Para '+'
+    OP_SUB,  
+    OP_MULT,
+    OP_DIV,       // Para '-'
+    OP_MAIOR,         // Para '>'
+    OP_MENOR,
+    OP_MENORIGUAL,
+    OP_MAIORIGUAL,
+    OP_DIFERENTE,         // Para '<'
+    OP_IGUAL,        
     DOIS_PONTOS,
     ABRE_PAR,
     FECHA_PAR,
@@ -79,17 +84,22 @@ char *msgAtomo[] = {
     "TO",
     "TRUE",
     "WRITE",
-    "PONTO_VIRGULA",
-    "VIRGULA",
+    ";",
+    ",",
     ".",
-    "MAIS",        
-    "MENOS",         
-    "MAIOR",        
-    "MENOR",         
-    "IGUAL",        
-    "DOIS_PONTOS",
-    "ABRE_PAR",
-    "FECHA_PAR",
+    "+",        
+    "-",
+    "*",
+    "/",         
+    ">",        
+    "<",
+    "<=",
+    ">=",
+    "/= ",         
+    "=",        
+    ":",
+    "abre_par",
+    "fecha_par",
     "EOS"
 };
 
@@ -99,6 +109,7 @@ TInfoAtomo obter_atomo();
 TInfoAtomo reconhece_id();
 TInfoAtomo reconhece_num();
 TInfoAtomo reconhece_comentario();
+TInfoAtomo reconhece_relacional();
 
 // Implementações das funções do analisador léxico
 char* ler_arquivo(const char* nome_arquivo) {
@@ -130,65 +141,95 @@ char* ler_arquivo(const char* nome_arquivo) {
 TInfoAtomo obter_atomo() {
     TInfoAtomo info_atomo;
 
-    while (1) {
-        while (*buffer == ' ' || *buffer == '\n' || *buffer == '\t' || *buffer == '\r') {
-            if (*buffer == '\n')
-                contaLinha++;
-            buffer++;
-        }
+    // consome espaços em branco, quebra de linhas, tabulação e retorno de carro
+    while (*buffer == ' ' || *buffer == '\n' || *buffer == '\t' || *buffer == '\r') {
+        if (*buffer == '\n')
+            contaLinha++;
+        buffer++;
+    }
 
-        if (*buffer == '#' || (*buffer == '{' && *(buffer + 1) == '-')) {
-            info_atomo = reconhece_comentario();
-            printf("# %d: %s\n", info_atomo.linha, msgAtomo[info_atomo.atomo]);
-            // Continue procurando o próximo átomo após o comentário
-            break;
-        }
-
-        if (islower(*buffer)) {
-            info_atomo = reconhece_id();
-        } else if (*buffer == '0' && *(buffer + 1) == 'b') {
-            info_atomo = reconhece_num();
-        } else if (*buffer == 0) {
-            info_atomo.atomo = EOS;
-        } else if (*buffer == '+') {
-            info_atomo.atomo = MAIS;
-            buffer++;
-        } else if (*buffer == '-') {
-            info_atomo.atomo = MENOS;
-            buffer++;
-        } else if (*buffer == '>') {
-            info_atomo.atomo = MAIOR;
-            buffer++;
-        } else if (*buffer == '.') {
-            info_atomo.atomo = PONTO;
-            buffer++;
-        } else if (*buffer == ',') {
-            info_atomo.atomo = VIRGULA;
-            buffer++;
-        } else if (*buffer == ';') {
-            info_atomo.atomo = PONTO_VIRGULA;
-            buffer++;
-        } else if (*buffer == '(') {
-            info_atomo.atomo = ABRE_PAR;
-            buffer++;
-        } else if (*buffer == ')') {
-            info_atomo.atomo = FECHA_PAR;
-            buffer++;
-        } else if (*buffer == '=') {
-            info_atomo.atomo = IGUAL;
-            buffer++;
-        } else {
-            info_atomo.atomo = *buffer;
-            buffer++;
-        }
-
-        break;
+    // reconhece identificador ou número
+    if (*buffer == ';') {
+        info_atomo.atomo = PONTO_VIRGULA;
+        buffer++;
+         
+    } else if (*buffer == '.') {
+        info_atomo.atomo = PONTO;
+        buffer++;
+    } else if (*buffer == ',') {
+        info_atomo.atomo = VIRGULA;
+        buffer++;
+    } else if (*buffer == '(') {
+        info_atomo.atomo = ABRE_PAR;
+        buffer++;
+    } else if (*buffer == ')') {
+        info_atomo.atomo = FECHA_PAR;
+        buffer++;
+    } else if (*buffer == '+') {
+        info_atomo.atomo = OP_SOMA;
+        buffer++;
+    } else if (*buffer == '-') {
+        info_atomo.atomo = OP_SUB;
+        buffer++;
+    } else if (*buffer == '*') {
+        info_atomo.atomo = OP_MULT;
+        buffer++;
+    } else if (*buffer == '/') {
+        info_atomo.atomo = OP_DIV;
+        buffer++;
+    } else if (*buffer == '=' || *buffer == '>' || *buffer == '<') {
+        info_atomo = reconhece_relacional();
+    } else if (*buffer == ':') {
+        info_atomo.atomo = DOIS_PONTOS;
+        buffer++;
+    } else if (islower(*buffer)) { // Se for letra minúscula
+        info_atomo = reconhece_id();
+    } else if (*buffer == '#' || (*buffer == '{' && *(buffer + 1) == '-')) {
+        info_atomo = reconhece_comentario();
+    } else if (*buffer == '0' && *(buffer + 1) == 'b') { // Número binário
+        info_atomo = reconhece_num();
+    } else if (*buffer == 0) {
+        info_atomo.atomo = EOS;
+    } else {
+        info_atomo.atomo = ERRO;
     }
 
     info_atomo.linha = contaLinha;
     return info_atomo;
 }
 
+TInfoAtomo reconhece_relacional() {
+    TInfoAtomo info_atomo;
+    info_atomo.atomo = ERRO;
+
+    // Verifica o operador relacional
+    if (*buffer == '=') {
+        info_atomo.atomo = OP_IGUAL;
+        buffer++;
+    } else if (*buffer == '>') {
+        buffer++;
+        if (*buffer == '=') {  // Verifica se é '>='
+            info_atomo.atomo = OP_MAIORIGUAL;
+            buffer++;
+        } else {
+            info_atomo.atomo = OP_MAIOR;  // Apenas '>'
+        }
+    } else if (*buffer == '<') {
+        buffer++;
+        if (*buffer == '=') {  // Verifica se é '<='
+            info_atomo.atomo = OP_MENORIGUAL;
+            buffer++;
+        } else if (*buffer == '>') {  // Verifica se é '/='
+            info_atomo.atomo = OP_DIFERENTE;
+            buffer++;
+        } else {
+            info_atomo.atomo = OP_MENOR;  // Apenas '<'
+        }
+    }
+
+    info_atomo.linha = contaLinha;
+    return info_atomo;
+}
 // Implementar reconhece_id(), reconhece_num() e reconhece_comentario() aqui
 TInfoAtomo reconhece_comentario() {
     TInfoAtomo info_atomo;
@@ -199,11 +240,11 @@ TInfoAtomo reconhece_comentario() {
         // Comentário de uma linha
         while (*buffer != '\n' && *buffer != 0) {
             buffer++;
-        }
+        }/*
         if (*buffer == '\n') {
             contaLinha++;
             buffer++;
-        }
+        }*/
     } else if (*buffer == '{' && *(buffer + 1) == '-') {
         // Comentário de várias linhas
         buffer += 2;
@@ -231,7 +272,7 @@ TInfoAtomo reconhece_num() {
         // Verifica se a sequência é válida (0 ou 1)
         int valor = 0;
         if (*buffer != '0' && *buffer != '1') {
-            return info_atomo; // Se não tiver ao menos um dígito válido, retorna erro
+            return info_atomo; // Se não tiver ao OP_SUB um dígito válido, retorna erro
         }
 
         while (*buffer == '0' || *buffer == '1') {
@@ -302,7 +343,7 @@ TAtomo lookahead;//posteriormente sera do tipo TAtomo, declarado no ASDR
 TInfoAtomo info_atomo;
 void consome(TAtomo atomo);
 
-// Protótipos de funções do analisador sintático
+/*/ Protótipos de funções do analisador sintático
 void expressao();
 void comando();
 void bloco();
@@ -316,15 +357,15 @@ void comando_entrada();
 void comando_saida();
 void comando_composto();
 void programa();
-
+*/
 // Implementações das funções do analisador sintático
 
 
-// Implementar as demais funções do analisador sintático aqui
+// Implementar as deOP_SOMA funções do analisador sintático aqui
 // (Copie as implementações do seu arquivo sintatico.c)
 // Funções para cada produção da gramática
 
-
+/**/
 void expressao(); // Prototipando expressao para uso posterior
 
 void comando();
@@ -342,10 +383,15 @@ void comando_composto();
 
 
 void consome(TAtomo atomo){
+    if(lookahead == COMENTARIO){
+        info_atomo = obter_atomo();
+        lookahead = info_atomo.atomo;
+        printf("%03d# %s\n", info_atomo.linha, msgAtomo[lookahead]);
+    }
+    else
     if(lookahead==atomo){
         info_atomo = obter_atomo();
         lookahead=info_atomo.atomo;
-
         if (info_atomo.atomo == IDENTIFICADOR)
             printf("%03d# %s | %s\n", info_atomo.linha, msgAtomo[lookahead], info_atomo.atributo_ID);
         else if (info_atomo.atomo == NUMERO)
@@ -374,7 +420,11 @@ void programa() {
     consome(PONTO);
 }
 
-
+void op_relacional () {
+    if(lookahead == OP_MENOR || lookahead == OP_MAIOR || lookahead == OP_IGUAL || lookahead == OP_MAIORIGUAL || lookahead == OP_MENORIGUAL || lookahead == OP_DIFERENTE){
+        consome(lookahead);
+    }
+}
 // <bloco>::= <declaracao_de_variaveis> <comando_composto>
 void bloco() {
     declaracao_de_variaveis();
@@ -426,27 +476,18 @@ void comando_composto() {
 //               <comando_saida> |
 //               <comando_composto>
 void comando() {
-    switch (lookahead) {
-        case SET:
-            comando_atribuicao();
-            break;
-        case IF:
-            comando_condicional();
-            break;
-        case FOR:
-            comando_repeticao();
-            break;
-        case READ:
-            comando_entrada();
-            break;
-        case WRITE:
-            comando_saida();
-            break;
-        case BEGIN:
-            comando_composto();
-            break;
-        default:
-            break;
+    if(lookahead == SET) {
+        comando_atribuicao();
+    } else if(lookahead == IF) {
+        comando_condicional();
+    } else if(lookahead == FOR) {
+        comando_repeticao();
+    } else if(lookahead == READ) {
+        comando_entrada();
+    } else if(lookahead == WRITE) {
+        comando_saida();
+    } else if(lookahead == BEGIN) {
+        comando_composto();
     }
 }
 
@@ -478,7 +519,7 @@ void comando_repeticao() {
     expressao();
     consome(TO);
     expressao();
-    consome(PONTO_VIRGULA);
+    consome(DOIS_PONTOS);
     comando();
 }
 
@@ -502,17 +543,62 @@ void comando_saida() {
     consome(FECHA_PAR);
 }
 
+void fator() {
+    if(lookahead == IDENTIFICADOR || lookahead == NUMERO || lookahead == TRUE || lookahead == FALSE){ 
+        consome(lookahead);
+    } else if(lookahead == NOT){
+        consome(NOT);
+        fator();
+    } else if(lookahead == ABRE_PAR){
+        consome(ABRE_PAR);
+        expressao();
+        consome(FECHA_PAR);
+    }
+}
+
+void termo() {
+    fator();
+    while(lookahead == OP_MULT || lookahead == OP_DIV){
+        consome(lookahead);
+        fator();
+    }
+}
+
+
+void expressao_simples() {
+    termo();
+    while(lookahead == OP_SOMA || lookahead == OP_SUB){
+        consome(lookahead);
+        termo();
+    }
+}
+
+void expressao_relacional() {
+    expressao_simples();
+    if(lookahead == OP_MENOR || lookahead == OP_MAIOR || lookahead == OP_IGUAL || lookahead == OP_MAIORIGUAL || lookahead == OP_MENORIGUAL || lookahead == OP_DIFERENTE){
+        op_relacional();
+        expressao_simples();
+    }
+       
+}
+
+void expressao_logica() {
+    expressao_relacional();
+    while(lookahead == AND){
+        consome(AND);
+        expressao_relacional();
+    }   
+}
 // Implementar a análise de expressões simples
 void expressao() {
     // Implementação básica: aceita números ou identificadores por enquanto
-    if (lookahead == NUMERO) {
-        consome(NUMERO);
-    } else if (lookahead == IDENTIFICADOR) {
-        consome(IDENTIFICADOR);
+    expressao_logica();
+    while(lookahead == OR){
+        consome(OR);
+        expressao_logica();
     } 
     
 }
-
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -526,7 +612,7 @@ int main(int argc, char *argv[]) {
     lookahead=info_atomo.atomo;
     
     programa();
-    consome(EOS);
+    //consome(EOS);
     printf("%d linhas analisadas, programa sintaticamente correto\n", contaLinha);
 
     free(original_buffer);

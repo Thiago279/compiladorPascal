@@ -387,6 +387,7 @@ void consome(TAtomo atomo){
         info_atomo = obter_atomo();
         lookahead = info_atomo.atomo;
         printf("%03d# %s\n", info_atomo.linha, msgAtomo[lookahead]);
+        consome(lookahead);
     }
     else
     if(lookahead==atomo){
@@ -401,6 +402,7 @@ void consome(TAtomo atomo){
         else
             printf("%03d# %s\n", info_atomo.linha, msgAtomo[lookahead]);
 
+
     }
     else{
         printf("#%d:Erro sintatico:esperado [%s] encontrado [%s] \n",info_atomo.linha,msgAtomo[atomo],msgAtomo[lookahead]);
@@ -409,10 +411,10 @@ void consome(TAtomo atomo){
 }
 // <programa> ::= program identificador “;” <bloco> “.”
 void programa() {
-    while (lookahead != PROGRAM && lookahead != EOS) {
+    /*while (lookahead != PROGRAM && lookahead != EOS) {
         consome(lookahead);
     }
-
+*/  
     consome(PROGRAM);
     consome(IDENTIFICADOR);
     consome(PONTO_VIRGULA);
@@ -610,11 +612,10 @@ int main(int argc, char *argv[]) {
 
     info_atomo = obter_atomo();
     lookahead=info_atomo.atomo;
-    
+    printf("%03d# %s\n", info_atomo.linha, msgAtomo[lookahead]);
     programa();
-    //consome(EOS);
     printf("%d linhas analisadas, programa sintaticamente correto\n", contaLinha);
-
     free(original_buffer);
+
     return 0;
 }

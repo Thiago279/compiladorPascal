@@ -13,10 +13,10 @@ Como executar o programa:
 Sobre o compilador:
 Este compilador é constituído por um analisador léxico e sintático para reconhecer a linguagem Pascal+-. 
 O código foi implementado em C e é capaz de ler um arquivo fonte, 
-identificar tokens e verificar a sintaxe do código.
+identificar atomos e verificar a sintaxe do código.
 
 Estrutura do projeto:
-1. Analisador Léxico: Identifica e classifica os tokens no código fonte. Os tokens suportados incluem:
+1. Analisador Léxico: Identifica e classifica os atomos no código fonte. Os atomos suportados incluem:
 - Identificadores
 - Números (em binário)
 - Comentários (de linha e de bloco)
@@ -38,14 +38,14 @@ O arquivo fonte é lido completamente e armazenado em um buffer.
 O analisador léxico utiliza esse buffer para processar o conteúdo.
 
 2. Identificação de Tokens 
-A função obter_atomo percorre o buffer, ignorando espaços em branco e identificando tokens válidos. 
-Dependendo do token encontrado, ele é classificado e atribuído a uma estrutura chamada TInfoAtomo.
+A função obter_atomo percorre o buffer, ignorando espaços em branco e identificando atomos válidos. 
+Dependendo do atomo encontrado, ele é classificado e atribuído a uma estrutura chamada TInfoAtomo.
 
 3. Análise Sintática 
 A função programa inicia a análise sintática. 
-Ela consome os tokens e verifica se estão de acordo com a gramática definida. 
+Ela consome os atomos e verifica se estão de acordo com a gramática definida. 
 Em caso de erro, uma mensagem é exibida, e o programa é encerrado.
 
 4. Exibição de Resultados 
-Após a análise, o programa exibe a linha e o tipo de cada token identificado, 
+Após a análise, o programa exibe a linha e o tipo de cada atomo identificado, 
 além de mensagens de erro quando apropriado.
